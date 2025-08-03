@@ -23,6 +23,15 @@ async def coverage_endpoint(
 
     cached = await get_cached_coverage(session, request.latitude, request.longitude, request.radius_m)
     if cached:
+        logger.info("Sending cached data to Google Sheets asynchronously.")
+        asyncio.create_task(append_row_to_google_sheet([
+            datetime.now(ZoneInfo("Europe/Moscow")).isoformat(),
+            request.latitude,
+            request.longitude,
+            request.radius_m,
+            cached["area_km2"],
+        ]))
+
         logger.info("Returning cached result.")
         return CoverageResponse(
             geojson=cached["geojson"],
