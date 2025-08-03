@@ -16,7 +16,7 @@ def get_google_credentials():
         [
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive",
-        ]
+        ],
     )
 
 
@@ -38,7 +38,9 @@ async def get_google_worksheet(sheet_name: str = GOOGLE_SHEET_NAME):
         raise
 
 
-async def append_row_to_google_sheet(row_data: list, sheet_name: str = GOOGLE_SHEET_NAME):
+async def append_row_to_google_sheet(
+    row_data: list, sheet_name: str = GOOGLE_SHEET_NAME
+):
     try:
         worksheet = await get_google_worksheet(sheet_name)
         logger.debug(f"Appending row: {row_data} to sheet: {sheet_name}")

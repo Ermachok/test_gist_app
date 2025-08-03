@@ -5,7 +5,9 @@ import json
 import geojson
 
 
-async def get_cached_coverage(session: AsyncSession, lat: float, lon: float, radius_m: float):
+async def get_cached_coverage(
+    session: AsyncSession, lat: float, lon: float, radius_m: float
+):
     result = await session.execute(
         select(CoverageRequest).where(
             CoverageRequest.latitude == lat,
@@ -22,7 +24,14 @@ async def get_cached_coverage(session: AsyncSession, lat: float, lon: float, rad
     return None
 
 
-async def save_coverage_to_cache(session: AsyncSession, lat: float, lon: float, radius_m: float, area_km2: float, geojson_polygon):
+async def save_coverage_to_cache(
+    session: AsyncSession,
+    lat: float,
+    lon: float,
+    radius_m: float,
+    area_km2: float,
+    geojson_polygon,
+):
     geojson_str = json.dumps(geojson_polygon)
     obj = CoverageRequest(
         latitude=lat,

@@ -19,18 +19,26 @@ async def coverage_endpoint(
     request: CoverageRequestIn,
     session: AsyncSession = Depends(get_session),
 ):
-    logger.info(f"Received coverage request: lat={request.latitude}, lon={request.longitude}, radius={request.radius_m}")
+    logger.info(
+        f"Received coverage request: lat={request.latitude}, lon={request.longitude}, radius={request.radius_m}"
+    )
 
-    cached = await get_cached_coverage(session, request.latitude, request.longitude, request.radius_m)
+    cached = await get_cached_coverage(
+        session, request.latitude, request.longitude, request.radius_m
+    )
     if cached:
         logger.info("Sending cached data to Google Sheets asynchronously.")
-        asyncio.create_task(append_row_to_google_sheet([
-            datetime.now(ZoneInfo("Europe/Moscow")).isoformat(),
-            request.latitude,
-            request.longitude,
-            request.radius_m,
-            cached["area_km2"],
-        ]))
+        asyncio.create_task(
+            append_row_to_google_sheet(
+                [
+                    datetime.now(ZoneInfo("Europe/Moscow")).isoformat(),
+                    request.latitude,
+                    request.longitude,
+                    request.radius_m,
+                    cached["area_km2"],
+                ]
+            )
+        )
 
         logger.info("Returning cached result.")
         return CoverageResponse(
@@ -42,20 +50,33 @@ async def coverage_endpoint(
     logger.info("No cache found. Computing coverage polygon...")
     await asyncio.sleep(5)
 
-    geojson_polygon, area_km2 = generate_circle_polygon(request.latitude, request.longitude, request.radius_m)
+    geojson_polygon, area_km2 = generate_circle_polygon(
+        request.latitude, request.longitude, request.radius_m
+    )
     logger.debug(f"Computed area (km²): {area_km2:.4f}")
 
-    await save_coverage_to_cache(session, request.latitude, request.longitude, request.radius_m, area_km2, geojson_polygon)
-    logger.info("Saved result to cache.")
-
-    logger.info("Sending data to Google Sheets asynchronously.")
-    asyncio.create_task(append_row_to_google_sheet([
-        datetime.now(ZoneInfo("Europe/Moscow")).isoformat(),
+    await save_coverage_to_cache(
+        session,
         request.latitude,
         request.longitude,
         request.radius_m,
         area_km2,
-    ]))
+        geojson_polygon,
+    )
+    logger.info("Saved result to cache.")
+
+    logger.info("Sending data to Google Sheets asynchronously.")
+    asyncio.create_task(
+        append_row_to_google_sheet(
+            [
+                datetime.now(ZoneInfo("Europe/Moscow")).isoformat(),
+                request.latitude,
+                request.longitude,
+                request.radius_m,
+                area_km2,
+            ]
+        )
+    )
 
     logger.info("Returning newly computed result.")
     return CoverageResponse(
